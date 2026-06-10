@@ -1,0 +1,95 @@
+body {
+  background: #fff8f6;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.navbar {
+  background: #e8a5b8 !important;
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+.card {
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.btn-primary {
+  background: #e8a5b8;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: #d98ca2;
+}
+
+.form-control {
+  border-radius: 12px;
+}
+
+.page-title {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #4a4a4a;
+}
+
+.success-card {
+  background: #cdeccf;
+  border-radius: 15px;
+  padding: 15px;
+}
+
+.error-card {
+  background: #ffd6d6;
+  border-radius: 15px;
+  padding: 15px;
+}
+
+#reader {
+  width: 100%;
+  max-width: 450px;
+  margin: auto;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.hero-section {
+  min-height: 100vh;
+  background:
+    linear-gradient(
+      135deg,
+      #f8d7da,
+      #fce4ec
+    );
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.hero-content {
+  max-width: 800px;
+}
+
+.hero-content h1 {
+  font-size: 4rem;
+  font-weight: bold;
+  color: #e08ca0;
+}
+
+.hero-content p {
+  font-size: 1.3rem;
+  margin-top: 20px;
+  color: #555;
+}
+
+.hero-buttons {
+  margin-top: 40px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
