@@ -92,8 +92,7 @@ function ManufacturerPage() {
       console.log("Product registered:");
 
       const qrContent =
-        `http://localhost:3000/verify/${formData.productId}/${formData.batchNumber}`;
-
+         `https://skincare-blockchain-git-main-amirahisknd-s-projects.vercel.app/verify/${formData.productId}/${formData.batchNumber}`;
       setQrData(qrContent);
 
       setSuccessMessage(
@@ -464,7 +463,7 @@ const manufacturer =
 
                     <QRCodeCanvas
                       id={`qr-${index}`}
-                      value={`http://localhost:3000/verify/${product[0]}/${product[2]}`}
+                      value={`https://skincare-blockchain-git-main-amirahisknd-s-projects.vercel.app/verify/${product[0]}/${product[2]}`}
                       size={70}
                     />
 
