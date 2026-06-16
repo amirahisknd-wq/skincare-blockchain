@@ -1,41 +1,44 @@
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function HomePage() {
+return ( <div className="homepage">
 
-  return (
+  {/* Navigation Bar */}
+  <div className="top-navbar">
 
-    <div className="hero-section">
+    <Link to="/manufacturer">
+      MANUFACTURER
+    </Link>
 
-      <div className="hero-content">
+    <span>|</span>
 
-        <h1>
-          Counterfeit Skincare
-          Identification System
-        </h1>
+    <Link to="/retailer-login">
+      RETAILER
+    </Link>
 
-        <div className="hero-buttons">
+    <span>|</span>
 
-          <Link
-            to="/login"
-            className="btn btn-light btn-lg"
-          >
-            Manufacturer Portal
-          </Link>
+    <Link to="/verify">
+      CONSUMER
+    </Link>
+  </div>
 
-          <Link
-            to="/verify"
-            className="btn btn-light btn-lg"
-          >
-            Consumer Verification
-          </Link>
+  {/* Hero Section */}
+  <div className="hero-section">
+    <div className="hero-content">
 
-        </div>
-
-      </div>
+      <h1>
+        Counterfeit Skincare
+        <br />
+        Identification System
+      </h1>
 
     </div>
+  </div>
 
-  );
+</div>
+
+);
 }
 
 export default HomePage;

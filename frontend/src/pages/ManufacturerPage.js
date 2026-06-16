@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { connectContract } from "../utils/contract";
 import { QRCodeCanvas } from "qrcode.react";
-import { Link } from "react-router-dom";
 import {Navigate} from "react-router-dom";
 
 function ManufacturerPage() {
@@ -22,6 +21,45 @@ function ManufacturerPage() {
 
   const [products, setProducts] =
     useState([]);
+
+  const [showProducts, setShowProducts] =
+    useState(false);
+
+  const [showDistributions, setShowDistributions] =
+    useState(false);
+
+  const [distributionRecords, setDistributionRecords] =
+    useState([]);
+
+  const [retailers, setRetailers] =
+    useState([]);
+
+  const [showRetailers, setShowRetailers] =
+    useState(false);
+
+  const [activeSection, setActiveSection] =
+    useState("product");
+
+  const [retailerData, setRetailerData] =
+    useState({
+      retailerId: "",
+      retailerName: ""
+    });
+
+  const [distributionData, setDistributionData] =
+    useState({
+      productId: "",
+      batchNumber: "",
+      retailerId: ""
+    });
+
+  const [updateData, setUpdateData] =
+    useState({
+      productId: "",
+      batchNumber: "",
+      field: "productName",
+      newValue: ""
+    });
 
   const handleChange = (e) => {
 
@@ -116,7 +154,192 @@ function ManufacturerPage() {
     }
   };
 
+ const updateProduct = async () => {
+
+  try {
+
+    const contract =
+      await connectContract();
+
+    const tx =
+      await contract.updateProduct(
+        updateData.productId,
+        updateData.batchNumber,
+        updateData.field,
+        updateData.newValue
+      );
+
+    await tx.wait();
+
+    setSuccessMessage(
+      "✅ Product updated successfully."
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error.reason ||
+      error.shortMessage ||
+      "Update failed."
+    );
+
+  }
+
+};
+
+  const handleRetailerChange = (e) => {
+
+    const upperCaseFields = [
+      "retailerId"
+    ];
+
+    setRetailerData({
+      ...retailerData,
+      [e.target.name]:
+        upperCaseFields.includes(e.target.name)
+          ? e.target.value.toUpperCase()
+          : e.target.value
+    });
+
+  };
+
+  const handleDistributionChange = (e) => {
+
+    const upperCaseFields = [
+      "productId",
+      "batchNumber",
+      "retailerId"
+    ];
+
+    setDistributionData({
+      ...distributionData,
+      [e.target.name]: 
+        upperCaseFields.includes(e.target.name)
+        ? e.target.value.toUpperCase()
+        : e.target.value
+    });
+
+  };
+
+  const handleUpdateChange = (e) => {
+
+    setUpdateData({
+      ...updateData,
+      [e.target.name]: e.target.value
+    });
+
+  };
+
+  const addRetailer = async () => {
+
+    console.log(retailerData);
+
+    if (
+      !retailerData.retailerId ||
+      !retailerData.retailerName
+    ) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    try {
+
+      const contract =
+        await connectContract();
+
+      console.log(
+        "addRetailer:",
+        typeof contract.addRetailer
+      );
+
+      console.log(
+        contract.interface.fragments
+          .map(f => f.name)
+      );
+
+      const tx =
+        await contract.addRetailer(
+          retailerData.retailerId,
+          retailerData.retailerName
+        );
+
+      await tx.wait();
+
+      alert(
+        "Retailer successfully added."
+      );
+
+    } catch (error) {
+
+      console.error("FULL ERROR:", error);
+
+        if (error.reason) {
+          console.log("Reason:", error.reason);
+        }
+
+        if (error.shortMessage) {
+          console.log("Short:", error.shortMessage);
+        }
+
+        if (error.data) {
+          console.log("Data:", error.data);
+        }
+
+      alert(
+        error.reason ||
+        error.shortMessage ||
+        error.message ||
+        "Failed to add retailer."
+      );
+    }
+
+  };
+
+  const assignRetailer = async () => {
+
+    try {
+
+      const contract =
+        await connectContract();
+
+      const tx =
+        await contract.assignRetailer(
+          distributionData.productId,
+          distributionData.batchNumber,
+          distributionData.retailerId
+        );
+
+      await tx.wait();
+
+      alert(
+        "Retailer assigned successfully."
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        error.reason ||
+        error.shortMessage ||
+        "Assignment failed."
+      );
+
+    }
+
+  };
+
   const loadProducts = async () => {
+
+    if (showProducts) {
+
+      setShowProducts(false);
+
+      return;
+
+    }
 
     console.log("View Products Clicked");
     
@@ -150,6 +373,8 @@ function ManufacturerPage() {
 
       setProducts(productList);
 
+      setShowProducts(true);
+
     } catch (error) {
 
       console.error(error);
@@ -158,6 +383,110 @@ function ManufacturerPage() {
         error.message
       );
     }
+  };
+
+  const loadRetailers = async () => {
+
+    if (showRetailers) {
+
+      setShowRetailers(false);
+
+      return;
+
+    }
+
+
+    try {
+
+      const contract =
+        await connectContract();
+
+      const total =
+        await contract.getTotalRetailers();
+
+      const retailerList = [];
+
+      for (
+        let i = 0;
+        i < Number(total);
+        i++
+      ) {
+
+        const retailer =
+          await contract.getRetailerByIndex(i);
+
+        retailerList.push(retailer);
+
+      }
+
+      setRetailers(retailerList);
+
+      setShowRetailers(true);
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
+
+  const loadDistributionRecords = async () => {
+
+    if (showDistributions) {
+
+      setShowDistributions(false);
+
+      return;
+
+    }
+
+    try {
+
+      const contract =
+        await connectContract();
+
+      const total =
+        await contract.getTotalProducts();
+
+      const records = [];
+
+      for (
+        let i = 0;
+        i < Number(total);
+        i++
+      ) {
+
+        const product =
+          await contract.getProductByIndex(i);
+
+        if (
+          product[6] &&
+          product[6] !== ""
+        ) {
+
+          records.push({
+            productId: product[0],
+            batchNumber: product[2],
+            retailerId: product[6]
+          });
+
+        }
+
+      }
+
+      setDistributionRecords(
+        records
+      );
+
+      setShowDistributions(true);
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
   };
 
   const downloadQR = (
@@ -214,26 +543,34 @@ const manufacturer =
       <div
         className="card shadow-lg p-4 mx-auto"
         style={{
-          maxWidth: "700px"
+          maxWidth: "900px"
         }}
       >
     <div 
         
         className="d-flex justify-content-end mb-4">
 
-      <Link
-        to="/"
-        className="btn btn-outline-secondary"
+      <button
+        className="btn btn-outline-danger"
+        onClick={() => {
+
+          localStorage.removeItem(
+            "manufacturer"
+          );
+
+          window.location.href = "/";
+
+        }}
       >
-        Back to Home
-      </Link>
+        Logout
+      </button>
 
     </div>
 
         <h2
 
           
-          className="text-center mb-2"
+          className="text-center mb-4"
           style={{
             color: "#E08CA0"
           }}
@@ -243,11 +580,61 @@ const manufacturer =
 
         </h2>
 
+        <div className="d-flex justify-content-center gap-3 mb-4">
+
+          <button
+            className={
+              activeSection === "product"
+                ? "btn btn-primary"
+                : "btn btn-outline-primary"
+            }
+            onClick={() =>
+              setActiveSection("product")
+            }
+          >
+            Product Registration
+          </button>
+
+          <button
+            className={
+              activeSection === "retailer"
+                ? "btn btn-primary"
+                : "btn btn-outline-primary"
+            }
+            onClick={() =>
+              setActiveSection("retailer")
+            }
+          >
+            Retailer Registration
+          </button>
+
+          <button
+            className={
+              activeSection === "distribution"
+                ? "btn btn-primary"
+                : "btn btn-outline-primary"
+            }
+            onClick={() =>
+              setActiveSection("distribution")
+            }
+          >
+            Distribution Management
+          </button>
+
+        </div>
+        {activeSection === "product" && (
+
         <p
           className="text-center text-muted mb-4"
         >
           Register skincare products and generate blockchain verification QR codes.
         </p>
+
+        )}
+
+        {activeSection === "product" && (
+
+          <>  
 
         <div className="mb-3">
 
@@ -351,29 +738,17 @@ const manufacturer =
           Register Product
         </button>
 
-        <button
-          className="btn btn-secondary w-100 mt-2"
-          onClick={loadProducts}
-        >
-          View Registered Products
-        </button>
+        {successMessage && (
 
-      </div>
+          <div
+            className="alert alert-success mt-3"
+          >
+            {successMessage}
+          </div>
 
-      {successMessage && (
+        )}
 
-        <div
-          className="alert alert-success mt-4 mx-auto"
-          style={{
-            maxWidth: "700px"
-          }}
-        >
-          {successMessage}
-        </div>
-
-      )}
-
-      {qrData && (
+        {activeSection === "product" && qrData && (
 
         <div
           className="card shadow-lg mt-4 p-4 mx-auto text-center"
@@ -381,7 +756,6 @@ const manufacturer =
             maxWidth: "700px"
           }}
         >
-
           <h3
             style={{
               color: "#E08CA0"
@@ -418,7 +792,18 @@ const manufacturer =
 
       )}
 
-      {products.length > 0 && (
+        <button
+          className="btn btn-secondary w-100 mt-2"
+          onClick={loadProducts}
+        >
+          {showProducts
+            ? "Hide Registered Products"
+            : "View Registered Products"}
+        </button>
+
+        {activeSection === "product" && 
+      showProducts && 
+      products.length > 0 && (
 
         <div
           className="card shadow-lg mt-4 p-4"
@@ -446,6 +831,7 @@ const manufacturer =
                 <th>Name</th>
                 <th>Batch</th>
                 <th>NPRA</th>
+                <th>Manufacturer Name</th>
                 <th>Action</th>
 
               </tr>
@@ -477,6 +863,8 @@ const manufacturer =
 
                     <td>{product[5]}</td>
 
+                    <td>{product[4]}</td>
+
                     <td>
                       <button
                         className="btn btn-sm btn-primary"
@@ -505,6 +893,342 @@ const manufacturer =
         </div>
 
       )}
+
+        <hr className="my-4" />
+
+        <h4>
+          Product Update
+        </h4>
+
+        <div className="mb-3">
+
+          <label className="form-label">
+            Product ID
+          </label>
+
+          <input
+            className="form-control"
+            name="productId"
+            value={updateData.productId}
+            onChange={handleUpdateChange}
+          />
+
+        </div>
+
+        <div className="mb-3">
+
+          <label className="form-label">
+            Batch Number
+          </label>
+
+          <input
+            className="form-control"
+            name="batchNumber"
+            value={updateData.batchNumber}
+            onChange={handleUpdateChange}
+          />
+
+        </div>
+
+        <div className="mb-3">
+
+          <label className="form-label">
+            Field To Update
+          </label>
+
+          <select
+            className="form-control"
+            name="field"
+            value={updateData.field}
+            onChange={handleUpdateChange}
+          >
+
+            <option value="productName">
+              Product Name
+            </option>
+
+            <option value="manufacturingDate">
+              Manufacturing Date
+            </option>
+
+            <option value="manufacturerName">
+              Manufacturer Name
+            </option>
+
+            <option value="npraRegistrationNumber">
+              NPRA Registration Number
+            </option>
+
+          </select>
+
+        </div>
+
+        <div className="mb-3">
+
+          <label className="form-label">
+            New Value
+          </label>
+
+          <input
+            className="form-control"
+            name="newValue"
+            value={updateData.newValue}
+            onChange={handleUpdateChange}
+          />
+
+        </div>
+
+        <button
+          className="btn btn-warning w-100"
+          onClick={updateProduct}
+        >
+          Update Product
+        </button>
+
+        </>
+      )}
+
+      {activeSection === "retailer" && (
+
+  <div>
+
+    <h4 className="mb-4">
+      Retailer Management
+    </h4>
+
+    <div className="mb-3">
+
+      <label className="form-label">
+        Retailer ID
+      </label>
+
+      <input
+        className="form-control"
+        name="retailerId"
+        value={retailerData.retailerId}
+        onChange={handleRetailerChange}
+      />
+
+    </div>
+
+    <div className="mb-3">
+
+      <label className="form-label">
+        Retailer Name
+      </label>
+
+      <input
+        className="form-control"
+        name="retailerName"
+        value={retailerData.retailerName}
+        onChange={handleRetailerChange}
+      />
+
+    </div>
+
+    <button
+      className="btn btn-primary w-100"
+      onClick={addRetailer}
+    >
+      Add Retailer
+    </button>
+
+    <button
+      className="btn btn-secondary w-100 mt-2"
+      onClick={loadRetailers}
+>
+  {showRetailers
+    ? "Hide Retailers"
+    : "View Retailers"}
+</button>
+
+  </div>
+
+)}
+
+{activeSection === "retailer" &&
+ showRetailers &&
+ retailers.length > 0 && (
+
+  <div
+    className="card shadow-lg mt-4 p-4"
+  >
+
+    <h4>
+      Registered Retailers
+    </h4>
+
+    <table
+      className="table table-striped"
+    >
+
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        {retailers.map(
+          (retailer, index) => (
+
+            <tr key={index}>
+              <td>{retailer[0]}</td>
+              <td>{retailer[1]}</td>
+            </tr>
+
+          )
+        )}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+)}
+
+
+{activeSection === "distribution" && (
+
+  <div>
+
+    <h4 className="mb-4">
+      Distribution Management
+    </h4>
+
+    <div className="mb-3">
+
+      <label className="form-label">
+        Product ID
+      </label>
+
+      <input
+        className="form-control"
+        name="productId"
+        value={distributionData.productId}
+        onChange={handleDistributionChange}
+      />
+
+    </div>
+
+    <div className="mb-3">
+
+      <label className="form-label">
+        Batch Number
+      </label>
+
+      <input
+        className="form-control"
+        name="batchNumber"
+        value={distributionData.batchNumber}
+        onChange={handleDistributionChange}
+      />
+
+    </div>
+
+    <div className="mb-3">
+
+      <label className="form-label">
+        Retailer ID
+      </label>
+
+      <input
+        className="form-control"
+        name="retailerId"
+        value={distributionData.retailerId}
+        onChange={handleDistributionChange}
+      />
+
+    </div>
+
+    <button
+      className="btn btn-primary w-100"
+      onClick={assignRetailer}
+    >
+      Assign Retailer
+    </button>
+
+    <button
+      className="btn btn-secondary w-100 mt-2"
+      onClick={loadDistributionRecords}
+    >
+      {showDistributions
+        ? "Hide Distribution Records"
+        : "View Distribution Records"}
+    </button>
+
+    {showDistributions &&
+      distributionRecords.length > 0 && (
+
+        <div
+          className="card shadow-lg mt-4 p-4"
+        >
+
+          <h4
+            className="mb-4"
+            style={{
+              color: "#E08CA0"
+            }}
+          >
+            Distribution Records
+          </h4>
+
+          <table
+            className="table table-striped"
+          >
+
+            <thead>
+
+              <tr>
+
+                <th>Product ID</th>
+                <th>Batch Number</th>
+                <th>Retailer ID</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              {distributionRecords.map(
+                (record, index) => (
+
+                  <tr key={index}>
+
+                    <td>
+                      {record.productId}
+                    </td>
+
+                    <td>
+                      {record.batchNumber}
+                    </td>
+
+                    <td>
+                      {record.retailerId}
+                    </td>
+
+                  </tr>
+
+                )
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      )}
+
+  </div>
+
+)}
+
+      </div>
 
     </div>
 

@@ -13,9 +13,6 @@ function ConsumerPage() {
 
   const [productInfo, setProductInfo] =
     useState(null);
-  
-  const [verificationCount, setVerificationCount] =
-    useState(0);
 
   const [isScanning, setIsScanning] =
     useState(false);
@@ -25,6 +22,9 @@ function ConsumerPage() {
 
   const [reportReason, setReportReason] =
     useState("");
+
+  const [showReport, setShowReport] =
+    useState(false);
   
   const [scannedProductId, setScannedProductId] =
     useState("");
@@ -105,23 +105,6 @@ function ConsumerPage() {
 
             if (verified) {
 
-              await axios.post(
-                "http://localhost:5000/log-verification",
-                {
-                  productId,
-                  batchNumber
-                }
-              );
-
-              const countResponse =
-                await axios.get(
-                  `http://localhost:5000/verification-count/${productId}/${batchNumber}`
-                );
-
-              setVerificationCount(
-                countResponse.data.count
-              );
-
               const product =
                 await contract.getProduct(
                   productId,
@@ -161,9 +144,7 @@ function ConsumerPage() {
           }
         },
 
-        (errorMessage) => {
-          // ignore scan errors
-        }
+        (errorMessage) => {}
       );
 
     } catch (error) {
@@ -177,6 +158,18 @@ function ConsumerPage() {
 };
 
 const reportProduct = async () => {
+
+  if (
+    !scannedProductId ||
+    !scannedBatchNumber
+  ) {
+
+    alert(
+      "Please scan a product first."
+    );
+
+    return;
+  }
 
   try {
 
@@ -342,7 +335,6 @@ return (
     >
       Scan Product QR Code
     </button>
-
   ) : (
 
     <button
@@ -354,7 +346,14 @@ return (
 
   )}
 
-</div>
+  {isScanning && (
+
+    <div
+      id="reader"
+      className="mx-auto mt-3"
+    ></div>
+
+  )}
 
       {isScanning && (
 
@@ -366,65 +365,33 @@ return (
 
       )}
 
-      <div
-        id="reader"
-        className="mx-auto"
-      ></div>
-
     </div>
 
     {verificationResult && (
 
       <div
-        className={`mt-4 mx-auto ${
+        className={`mt-3 ${
           verificationResult.includes("GENUINE")
             ? "alert alert-success"
             : "alert alert-danger"
         }`}
-        style={{
-          maxWidth: "700px"
-        }}
       >
 
-        <h4 className="mb-0">
+        <h4 className="mb-2">
           {verificationResult}
         </h4>
+
+        {
+          verificationResult ===
+          "GENUINE PRODUCT" && (
+
+            <small>
+              Product record successfully verified on blockchain.
+            </small>
+
+          )
+        }
     
-    {
-      verificationResult.includes(
-        "NOT VERIFIED"
-      ) && (
-
-    <div
-      className="card p-3 mt-3"
-    >
-
-    <h5>
-      Report Suspicious Product
-    </h5>
-
-  <textarea
-    className="form-control mb-3"
-    placeholder="Describe why you suspect this product is counterfeit..."
-    value={reportReason}
-    onChange={(e) =>
-      setReportReason(
-        e.target.value
-      )
-    }
-  />
-
-  <button
-    className="btn btn-danger"
-    onClick={reportProduct}
-  >
-    Submit Report
-  </button>
-
-</div>
-
-)}
-
       </div>
 
     )}
@@ -432,10 +399,7 @@ return (
     {productInfo && (
 
       <div
-        className="card shadow-lg mt-4 p-4 mx-auto"
-        style={{
-          maxWidth: "700px"
-        }}
+        className="card shadow-lg mt-2 p-4"
       >
 
         <h3
@@ -444,7 +408,7 @@ return (
             color: "#E08CA0"
           }}
         >
-          Product Information
+          Verified Product Information
         </h3>
 
         <div className="row">
@@ -492,11 +456,23 @@ return (
             </p>
 
             <p>
-              <strong>
-                QR Verification Count
-              </strong>
+              <strong>Product Status</strong>
               <br />
-              {verificationCount}
+              {
+                productInfo[7]
+                  ? "Purchased by Consumer"
+                  : "Available for Purchase"
+              }
+            </p>
+
+            <p>
+              <strong>Blockchain Traceability</strong>
+              <br />
+              {
+                productInfo[7]
+                  ? "Ownership Registered"
+                  : "Ownership Not Yet Registered"
+              }
             </p>
 
           </div>
@@ -506,6 +482,87 @@ return (
       </div>
 
     )}
+
+    <button
+        className="btn btn-secondary mt-4"
+        onClick={() =>
+          setShowReport(
+            !showReport
+          )
+        }
+      >
+        {showReport
+          ? "Report Form"
+          : "Report Form"}
+      </button>
+
+      {showReport && (
+
+      <div
+        className="card shadow-lg mt-4 p-4"
+      >
+
+        <h3
+          className="mb-4"
+          style={{
+            color: "#E08CA0"
+          }}
+        >
+          Report Suspicious Product
+        </h3>
+
+        <div className="mb-3">
+
+          <label>
+            Product ID
+          </label>
+
+          <input
+            className="form-control"
+            value={scannedProductId}
+            readOnly
+          />
+
+        </div>
+
+        <div className="mb-3">
+
+          <label>
+            Batch Number
+          </label>
+
+          <input
+            className="form-control"
+            value={scannedBatchNumber}
+            readOnly
+          />
+
+        </div>
+
+        <textarea
+          className="form-control mb-3"
+          rows="4"
+          placeholder="Describe why you suspect this product is counterfeit..."
+          value={reportReason}
+          onChange={(e) =>
+            setReportReason(
+              e.target.value
+            )
+          }
+        />
+
+        <button
+          className="btn btn-danger w-100"
+          onClick={reportProduct}
+        >
+          Submit Report
+        </button>
+
+      </div>
+
+    )}
+
+    </div>
 
   </div>
 

@@ -1,5 +1,69 @@
 [
 	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_retailerId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_retailerName",
+				"type": "string"
+			}
+		],
+		"name": "addRetailer",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_batchNumber",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_consumerCode",
+				"type": "string"
+			}
+		],
+		"name": "assignConsumer",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_batchNumber",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_retailerId",
+				"type": "string"
+			}
+		],
+		"name": "assignRetailer",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -91,6 +155,34 @@
 				"internalType": "string",
 				"name": "_batchNumber",
 				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_field",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_newValue",
+				"type": "string"
+			}
+		],
+		"name": "updateProduct",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_batchNumber",
+				"type": "string"
 			}
 		],
 		"name": "getProduct",
@@ -123,6 +215,16 @@
 			{
 				"internalType": "string",
 				"name": "npraRegistrationNumber",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "retailerId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "consumerCode",
 				"type": "string"
 			},
 			{
@@ -175,6 +277,16 @@
 				"type": "string"
 			},
 			{
+				"internalType": "string",
+				"name": "retailerId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "consumerCode",
+				"type": "string"
+			},
+			{
 				"internalType": "bool",
 				"name": "isRegistered",
 				"type": "bool"
@@ -184,8 +296,50 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "getRetailerByIndex",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "retailerId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "retailerName",
+				"type": "string"
+			},
+			{
+				"internalType": "bool",
+				"name": "exists",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "getTotalProducts",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getTotalRetailers",
 		"outputs": [
 			{
 				"internalType": "uint256",

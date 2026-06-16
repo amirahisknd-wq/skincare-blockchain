@@ -9,6 +9,8 @@ import ManufacturerPage from "./pages/ManufacturerPage";
 import ConsumerPage from "./pages/ConsumerPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
+import RetailerPage from "./pages/RetailerPage";
+import RetailerLoginPage from "./pages/RetailerLoginPage";
 
 console.log("LoginPage => ", LoginPage);
 
@@ -35,6 +37,16 @@ function App() {
           <Route
             path="/manufacturer"
             element={<ManufacturerPage />}
+          />
+
+          <Route
+            path="/retailer-login"
+            element={<RetailerLoginPage />}
+          />
+
+          <Route
+            path="/retailer"
+            element={<RetailerPage />}
           />
 
           <Route
