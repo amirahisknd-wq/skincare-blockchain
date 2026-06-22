@@ -7,8 +7,6 @@ import { useEffect } from "react";
 
 function ConsumerPage() {
 
-  alert("ConsumerPage Loaded");
-  
   const [verificationResult, setVerificationResult] =
     useState("");
 
