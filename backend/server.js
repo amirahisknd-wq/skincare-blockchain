@@ -69,9 +69,7 @@ app.post("/login", (req, res) => {
   );
 });
 
-app.post(
-  "/retailer-login",
-  (req, res) => {
+app.post("/retailer-login", (req, res) => {
 
     const {
       retailerId,
@@ -122,9 +120,7 @@ app.post(
 
 });
 
-app.post(
-  "/report-product",
-  (req, res) => {
+app.post( "/report-product", (req, res) => {
 
     const {
       productId,
@@ -167,28 +163,32 @@ app.post(
   }
 );
 
-app.post(
-  "/log-verification",
-  (req, res) => {
+app.post( "/register-retailer", (req, res) => {
 
+    console.log(req.body);
+    
     const {
-      productId,
-      batchNumber
+      retailerId,
+      retailerName,
+      password
     } = req.body;
 
     db.query(
       `
-      INSERT INTO verification_logs
+      INSERT INTO retailers
       (
-        product_id,
-        batch_number
+        retailer_id,
+        retailer_name,
+        password
       )
-      VALUES (?, ?)
+      VALUES (?, ?, ?)
       `,
       [
-        productId,
-        batchNumber
+        retailerId,
+        retailerName,
+        password
       ],
+
       (err) => {
 
         if (err) {
@@ -198,53 +198,16 @@ app.post(
           return res.json({
             success: false
           });
+
         }
 
         res.json({
           success: true
         });
+
       }
     );
-  }
-);
 
-app.get(
-  "/verification-count/:productId/:batchNumber",
-  (req, res) => {
-
-    const {
-      productId,
-      batchNumber
-    } = req.params;
-
-    db.query(
-      `
-      SELECT COUNT(*) AS total
-      FROM verification_logs
-      WHERE product_id = ?
-      AND batch_number = ?
-      `,
-      [
-        productId,
-        batchNumber
-      ],
-      (err, result) => {
-
-        if (err) {
-
-          console.log(err);
-
-          return res.json({
-            success: false
-          });
-        }
-
-        res.json({
-          success: true,
-          count: result[0].total
-        });
-      }
-    );
   }
 );
 

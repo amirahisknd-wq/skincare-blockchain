@@ -2,6 +2,8 @@ import { useState } from "react";
 import { connectContract } from "../utils/contract";
 import { QRCodeCanvas } from "qrcode.react";
 import {Navigate} from "react-router-dom";
+import axios from "axios";
+import { Html5Qrcode } from "html5-qrcode";
 
 function ManufacturerPage() {
 
@@ -46,6 +48,10 @@ function ManufacturerPage() {
       retailerName: ""
     });
 
+  const [retailerPassword,
+       setRetailerPassword] =
+  useState("");
+
   const [distributionData, setDistributionData] =
     useState({
       productId: "",
@@ -53,13 +59,13 @@ function ManufacturerPage() {
       retailerId: ""
     });
 
-  const [updateData, setUpdateData] =
-    useState({
-      productId: "",
-      batchNumber: "",
-      field: "productName",
-      newValue: ""
-    });
+  const [isScanningDistribution,
+    setIsScanningDistribution] =
+    useState(false);
+
+  const [distributionScanner,
+    setDistributionScanner] =
+    useState(null);
 
   const handleChange = (e) => {
 
@@ -130,7 +136,8 @@ function ManufacturerPage() {
       console.log("Product registered:");
 
       const qrContent =
-         `https://skincare-blockchain-git-main-amirahisknd-s-projects.vercel.app/verify/${formData.productId}/${formData.batchNumber}`;
+         `https://skincare-blockchain-git-main-amirahisknd-s-projects.vercel.app/verify/
+         ${formData.productId}/${formData.batchNumber}`;
       setQrData(qrContent);
 
       setSuccessMessage(
@@ -153,41 +160,6 @@ function ManufacturerPage() {
       }
     }
   };
-
- const updateProduct = async () => {
-
-  try {
-
-    const contract =
-      await connectContract();
-
-    const tx =
-      await contract.updateProduct(
-        updateData.productId,
-        updateData.batchNumber,
-        updateData.field,
-        updateData.newValue
-      );
-
-    await tx.wait();
-
-    setSuccessMessage(
-      "✅ Product updated successfully."
-    );
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      error.reason ||
-      error.shortMessage ||
-      "Update failed."
-    );
-
-  }
-
-};
 
   const handleRetailerChange = (e) => {
 
@@ -223,23 +195,16 @@ function ManufacturerPage() {
 
   };
 
-  const handleUpdateChange = (e) => {
-
-    setUpdateData({
-      ...updateData,
-      [e.target.name]: e.target.value
-    });
-
-  };
-
   const addRetailer = async () => {
 
     console.log(retailerData);
 
     if (
       !retailerData.retailerId ||
-      !retailerData.retailerName
+      !retailerData.retailerName ||
+      !retailerPassword
     ) {
+
       alert("Please fill in all fields.");
       return;
     }
@@ -267,9 +232,30 @@ function ManufacturerPage() {
 
       await tx.wait();
 
+      await axios.post(
+        "http://localhost:5000/register-retailer",
+        {
+          retailerId:
+            retailerData.retailerId.toUpperCase(),
+
+            retailerName:
+              retailerData.retailerName,
+
+          password:
+            retailerPassword
+        }
+      );
+
       alert(
         "Retailer successfully added."
       );
+
+      setRetailerData({
+        retailerId: "",
+        retailerName: ""
+      });
+
+setRetailerPassword("");
 
     } catch (error) {
 
@@ -328,6 +314,89 @@ function ManufacturerPage() {
       );
 
     }
+
+  };
+
+  const startDistributionScanner = async () => {
+    setIsScanningDistribution(true);
+    setTimeout(async () => {
+      try {
+        const html5QrCode =
+          new Html5Qrcode(
+            "distribution-reader"
+          );
+        setDistributionScanner(
+          html5QrCode
+        );
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: 250
+          },
+          async (decodedText) => {
+
+            await html5QrCode.stop();
+
+            setDistributionScanner(null);
+
+            setIsScanningDistribution(false);
+
+            const parts =
+              decodedText.split("/");
+
+            const productId =
+              parts[
+                parts.length - 2
+              ];
+
+            const batchNumber =
+              parts[
+                parts.length - 1
+              ];
+
+            setDistributionData({
+              ...distributionData,
+              productId,
+              batchNumber
+            });
+
+          }
+
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Camera failed."
+        );
+
+      }
+
+    }, 100);
+
+  };
+
+  const stopDistributionScanner =
+    async () => {
+
+    if (
+      distributionScanner
+    ) {
+
+      await distributionScanner.stop();
+
+      setDistributionScanner(
+        null
+      );
+
+    }
+
+    setIsScanningDistribution(
+      false
+    );
 
   };
 
@@ -618,7 +687,7 @@ const manufacturer =
               setActiveSection("distribution")
             }
           >
-            Distribution Management
+           Product Distribution 
           </button>
 
         </div>
@@ -894,97 +963,6 @@ const manufacturer =
 
       )}
 
-        <hr className="my-4" />
-
-        <h4>
-          Product Update
-        </h4>
-
-        <div className="mb-3">
-
-          <label className="form-label">
-            Product ID
-          </label>
-
-          <input
-            className="form-control"
-            name="productId"
-            value={updateData.productId}
-            onChange={handleUpdateChange}
-          />
-
-        </div>
-
-        <div className="mb-3">
-
-          <label className="form-label">
-            Batch Number
-          </label>
-
-          <input
-            className="form-control"
-            name="batchNumber"
-            value={updateData.batchNumber}
-            onChange={handleUpdateChange}
-          />
-
-        </div>
-
-        <div className="mb-3">
-
-          <label className="form-label">
-            Field To Update
-          </label>
-
-          <select
-            className="form-control"
-            name="field"
-            value={updateData.field}
-            onChange={handleUpdateChange}
-          >
-
-            <option value="productName">
-              Product Name
-            </option>
-
-            <option value="manufacturingDate">
-              Manufacturing Date
-            </option>
-
-            <option value="manufacturerName">
-              Manufacturer Name
-            </option>
-
-            <option value="npraRegistrationNumber">
-              NPRA Registration Number
-            </option>
-
-          </select>
-
-        </div>
-
-        <div className="mb-3">
-
-          <label className="form-label">
-            New Value
-          </label>
-
-          <input
-            className="form-control"
-            name="newValue"
-            value={updateData.newValue}
-            onChange={handleUpdateChange}
-          />
-
-        </div>
-
-        <button
-          className="btn btn-warning w-100"
-          onClick={updateProduct}
-        >
-          Update Product
-        </button>
-
         </>
       )}
 
@@ -1008,6 +986,26 @@ const manufacturer =
         value={retailerData.retailerId}
         onChange={handleRetailerChange}
       />
+
+    <div className="mb-3">
+
+      <label className="form-label">
+        Password
+      </label>
+      
+
+      <input
+        type="password"
+        className="form-control"
+        value={retailerPassword}
+        onChange={(e) =>
+          setRetailerPassword(
+            e.target.value
+          )
+        }
+      />
+
+    </div>
 
     </div>
 
@@ -1096,8 +1094,30 @@ const manufacturer =
   <div>
 
     <h4 className="mb-4">
-      Distribution Management
+      Product Distribution 
     </h4>
+
+    <button
+      className="btn btn-success w-100 mb-3"
+      onClick={
+        isScanningDistribution
+          ? stopDistributionScanner
+          : startDistributionScanner
+      }
+    >
+      {isScanningDistribution
+        ? "Stop Scanner"
+        : "Scan Product QR"}
+    </button>
+
+    {isScanningDistribution && (
+
+      <div
+        id="distribution-reader"
+        className="mt-3"
+      ></div>
+
+    )}
 
     <div className="mb-3">
 
@@ -1108,6 +1128,7 @@ const manufacturer =
       <input
         className="form-control"
         name="productId"
+        readOnly
         value={distributionData.productId}
         onChange={handleDistributionChange}
       />
@@ -1123,6 +1144,7 @@ const manufacturer =
       <input
         className="form-control"
         name="batchNumber"
+        readOnly
         value={distributionData.batchNumber}
         onChange={handleDistributionChange}
       />

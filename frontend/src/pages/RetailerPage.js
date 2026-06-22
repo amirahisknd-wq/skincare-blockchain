@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { connectContract } from "../utils/contract";
 import { Navigate } from "react-router-dom";
+import { Html5Qrcode } from "html5-qrcode";
 
 function RetailerPage() {
 
@@ -17,14 +18,24 @@ const [assignedProducts, setAssignedProducts] =
 const [showProducts, setShowProducts] =
     useState(false);
 
-const [successMessage, setSuccessMessage] =
-        useState("");
+const [isScanning, setIsScanning] =
+    useState(false);
+
+const [scanner, setScanner] =
+    useState(null);
 
   const handleChange = (e) => {
 
+    const upperCaseFields = [
+        "consumerCode"
+    ];
+
     setConsumerData({
       ...consumerData,
-      [e.target.name]: e.target.value
+      [e.target.name]: 
+      upperCaseFields.includes(e.target.name)
+        ? e.target.value.toUpperCase()
+        : e.target.value
     });
 
   };
@@ -53,8 +64,8 @@ const [successMessage, setSuccessMessage] =
 
       await tx.wait();
 
-      setSuccessMessage(
-        "✅ Consumer assigned successfully."
+      alert(
+        "Consumer assigned successfully."
         );
 
       setConsumerData({
@@ -76,6 +87,83 @@ const [successMessage, setSuccessMessage] =
     }
 
   };
+
+  const startScanner = async () => {
+
+    setIsScanning(true);
+
+    setTimeout(async () => {
+
+        try {
+
+            const html5QrCode =
+                new Html5Qrcode("retailer-reader");
+
+            setScanner(html5QrCode);
+
+            await html5QrCode.start(
+
+                { facingMode: "environment" },
+
+                {
+                    fps: 10,
+                    qrbox: 250
+                },
+
+                async (decodedText) => {
+
+                    await html5QrCode.stop();
+
+                    setScanner(null);
+
+                    setIsScanning(false);
+
+                    const parts =
+                        decodedText.split("/");
+
+                    const productId =
+                        parts[parts.length - 2];
+
+                    const batchNumber =
+                        parts[parts.length - 1];
+
+                    setConsumerData({
+                        ...consumerData,
+                        productId,
+                        batchNumber
+                    });
+
+                }
+
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Camera failed."
+            );
+
+        }
+
+    }, 100);
+
+};
+
+const stopScanner = async () => {
+
+    if (scanner) {
+
+        await scanner.stop();
+
+        setScanner(null);
+
+    }
+
+    setIsScanning(false);
+
+};
 
   const loadProducts = async () => {
 
@@ -190,6 +278,28 @@ const [successMessage, setSuccessMessage] =
                 Assign product ownership to consumers.
                 </p>
 
+            <button
+                className="btn btn-success w-100 mb-3"
+                onClick={
+                    isScanning
+                    ? stopScanner
+                    : startScanner
+                }
+            >
+                {isScanning
+                    ? "Stop Scanner"
+                    : "Scan Product QR"}
+            </button>
+
+            {isScanning && (
+
+            <div
+                id="retailer-reader"
+                className="mt-3 mb-3"
+            ></div>
+
+            )}
+
         <div className="mb-3">
 
           <label>
@@ -199,6 +309,7 @@ const [successMessage, setSuccessMessage] =
           <input
             className="form-control"
             name="productId"
+            readOnly
             value={consumerData.productId}
             onChange={handleChange}
           />
@@ -214,6 +325,7 @@ const [successMessage, setSuccessMessage] =
           <input
             className="form-control"
             name="batchNumber"
+            readOnly
             value={consumerData.batchNumber}
             onChange={handleChange}
           />
@@ -241,19 +353,6 @@ const [successMessage, setSuccessMessage] =
         >
           Assign Consumer
         </button>
-
-        {successMessage && (
-
-        <div
-            className="alert alert-success mt-4 mx-auto"
-            style={{
-            maxWidth: "700px"
-            }}
-        >
-            {successMessage}
-        </div>
-
-        )}
 
         <button
             className="btn btn-secondary w-100 mt-2"
