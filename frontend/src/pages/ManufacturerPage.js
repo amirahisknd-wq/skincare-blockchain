@@ -136,8 +136,7 @@ function ManufacturerPage() {
       console.log("Product registered:");
 
       const qrContent =
-         `https://skincare-blockchain-git-main-amirahisknd-s-projects.vercel.app/verify/
-         ${formData.productId}/${formData.batchNumber}`;
+         `https://skincare-blockchain-git-main-amirahisknd-s-projects.vercel.app/verify/${formData.productId}/${formData.batchNumber}`;
       setQrData(qrContent);
 
       setSuccessMessage(

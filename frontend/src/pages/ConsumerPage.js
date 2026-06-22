@@ -237,18 +237,28 @@ useEffect(() => {
       const contract =
         await connectReadOnlyContract();
 
+      const productId =
+        decodeURIComponent(urlProductId)
+          .trim()
+          .toUpperCase();
+
+      const batchNumber =
+        decodeURIComponent(urlBatchNumber)
+          .trim()
+          .toUpperCase();
+
       const verified =
         await contract.verifyProduct(
-          urlProductId,
-          urlBatchNumber
+          productId,
+          batchNumber
         );
 
       if (verified) {
 
         const product =
           await contract.getProduct(
-            urlProductId,
-            urlBatchNumber
+            productId,
+            batchNumber
           );
 
         setProductInfo(product);
