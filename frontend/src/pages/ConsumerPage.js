@@ -7,6 +7,7 @@ import { useEffect } from "react";
 
 function ConsumerPage() {
 
+  console.log("VERSION 123");
   
   const [verificationResult, setVerificationResult] =
     useState("");
